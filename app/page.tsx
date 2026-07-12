@@ -1,626 +1,558 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { Resource, ResourceFormState, CATEGORIES, STATUSES } from "@/types/Resource";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useSessionStorage } from "@/hooks/useSessionStorage";
+import { useCookie } from "@/hooks/useCookie";
+import { validateResourceForm, ValidationErrors } from "@/utils/validations";
+import { Header } from "@/components/Header";
+import { SearchBar } from "@/components/SearchBar";
+import { FilterCategory } from "@/components/FilterCategory";
+import { ResourceForm } from "@/components/ResourceForm";
+import { ResourceList } from "@/components/ResourceList";
+import { ConfirmDeleteModal } from "@/components/ConfirmDeleteModal";
 
-type Product = {
-  id: string;
-  name: string;
-  category: string;
-  price: number;
-  stock: number;
-};
+// Keys for browser storages
+const RESOURCES_STORAGE_KEY = "lab_resources";
+const DRAFT_SESSION_KEY = "lab_resource_draft";
+const FILTER_SEARCH_KEY = "lab_filter_search";
+const FILTER_CATEGORY_KEY = "lab_filter_category";
+const FILTER_STATUS_KEY = "lab_filter_status";
+const FILTER_SORT_KEY = "lab_filter_sort";
+const PREF_THEME_COOKIE = "lab_theme";
+const PREF_USER_COOKIE = "lab_user_preferences";
+const PREF_VIEW_COOKIE = "lab_view";
 
-type ProductForm = {
-  name: string;
-  category: string;
-  price: string;
-  stock: string;
-};
-
-type Preferences = {
-  userName: string;
-  accent: "teal" | "rose" | "amber";
-  compact: boolean;
-};
-
-const PRODUCTS_KEY = "crud-demo:products";
-const DRAFT_KEY = "crud-demo:draft";
-const FILTER_KEY = "crud-demo:filter";
-const PREF_COOKIE = "crud_demo_preferences";
-
-const emptyForm: ProductForm = {
-  name: "",
-  category: "",
-  price: "",
-  stock: "",
-};
-
-const demoProducts: Product[] = [
+const demoResources: Resource[] = [
   {
-    id: "demo-1",
-    name: "Notebook de proyecto",
-    category: "Papeleria",
-    price: 5490,
-    stock: 12,
+    id: "rec-001",
+    name: "Router Cisco 2901",
+    category: "Redes",
+    quantity: 4,
+    status: "Disponible",
+    location: "Laboratorio 3",
+    responsible: "Encargado TIC",
+    registrationDate: "2026-07-09",
+    description: "Router modular con interfaces WAN Gigabit Ethernet, utilizado para prácticas de configuración CLI."
   },
   {
-    id: "demo-2",
-    name: "Cafe de especialidad",
-    category: "Cocina",
-    price: 11990,
-    stock: 8,
+    id: "rec-002",
+    name: "Notebook HP ProBook",
+    category: "Computación",
+    quantity: 12,
+    status: "En uso",
+    location: "Sala de Computación A",
+    responsible: "Prof. Martínez",
+    registrationDate: "2026-06-15",
+    description: "Notebooks para desarrollo de software e interfaces IDE, equipados con 16GB RAM y SSD de 512GB."
   },
   {
-    id: "demo-3",
-    name: "Cable USB-C",
-    category: "Tecnologia",
-    price: 7990,
-    stock: 25,
+    id: "rec-003",
+    name: "Osciloscopio Digital Rigol",
+    category: "Electrónica/IoT",
+    quantity: 2,
+    status: "En mantención",
+    location: "Taller de Electrónica",
+    responsible: "Téc. Villagrán",
+    registrationDate: "2026-07-02",
+    description: "Osciloscopio de 4 canales y 100 MHz. Bajo revisión por fallas de calibración en canal 2."
   },
+  {
+    id: "rec-004",
+    name: "Cautín Regulable TS100",
+    category: "Herramientas",
+    quantity: 8,
+    status: "Disponible",
+    location: "Taller de Electrónica",
+    responsible: "Téc. Villagrán",
+    registrationDate: "2026-07-05",
+    description: "Cautín inteligente de soldadura con control de temperatura digital OLED."
+  },
+  {
+    id: "rec-005",
+    name: "Filamento PLA 1.75mm (1kg)",
+    category: "Insumos",
+    quantity: 15,
+    status: "Disponible",
+    location: "Laboratorio 3D",
+    responsible: "Ayudante Soto",
+    registrationDate: "2026-07-10",
+    description: "Insumo de bobinas de filamento PLA color negro y azul para impresora Creality Ender 3."
+  }
 ];
 
-const defaultPreferences: Preferences = {
-  userName: "Invitado",
-  accent: "teal",
-  compact: false,
+const getTodayString = () => new Date().toISOString().split('T')[0];
+
+const emptyForm: ResourceFormState = {
+  name: "",
+  category: "",
+  quantity: 1,
+  status: "Disponible",
+  location: "",
+  responsible: "",
+  registrationDate: getTodayString(),
+  description: "",
 };
-
-const accentClasses = {
-  teal: {
-    button: "bg-teal-700 hover:bg-teal-800 focus-visible:outline-teal-600",
-    soft: "bg-teal-50 text-teal-900 border-teal-200",
-    ring: "focus:border-teal-600 focus:ring-teal-600/20",
-    text: "text-teal-700",
-  },
-  rose: {
-    button: "bg-rose-700 hover:bg-rose-800 focus-visible:outline-rose-600",
-    soft: "bg-rose-50 text-rose-900 border-rose-200",
-    ring: "focus:border-rose-600 focus:ring-rose-600/20",
-    text: "text-rose-700",
-  },
-  amber: {
-    button: "bg-amber-600 hover:bg-amber-700 focus-visible:outline-amber-500",
-    soft: "bg-amber-50 text-amber-950 border-amber-200",
-    ring: "focus:border-amber-600 focus:ring-amber-600/20",
-    text: "text-amber-700",
-  },
-};
-
-function getCookie(name: string) {
-  // Las cookies se leen desde document.cookie en el cliente.
-  if (typeof document === "undefined") {
-    return null;
-  }
-
-  const match = document.cookie
-    .split("; ")
-    .find((cookie) => cookie.startsWith(`${name}=`));
-
-  return match ? decodeURIComponent(match.split("=")[1]) : null;
-}
-
-function setCookie(name: string, value: string, days = 30) {
-  const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
-
-  // SameSite=Lax evita enviar la cookie en varios contextos de terceros.
-  document.cookie = `${name}=${encodeURIComponent(
-    value,
-  )}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
-}
-
-function readPreferences(): Preferences {
-  const stored = getCookie(PREF_COOKIE);
-
-  if (!stored) {
-    return defaultPreferences;
-  }
-
-  return { ...defaultPreferences, ...parseJson(stored, defaultPreferences) };
-}
-
-function parseJson<T>(value: string | null, fallback: T): T {
-  // Si el usuario edita el storage manualmente y rompe el JSON, usamos un valor seguro.
-  if (!value) {
-    return fallback;
-  }
-
-  try {
-    return JSON.parse(value) as T;
-  } catch {
-    return fallback;
-  }
-}
-
-function money(value: number) {
-  return new Intl.NumberFormat("es-CL", {
-    style: "currency",
-    currency: "CLP",
-    maximumFractionDigits: 0,
-  }).format(value);
-}
 
 export default function Home() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [form, setForm] = useState<ProductForm>(emptyForm);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [filter, setFilter] = useState("");
-  const [preferences, setPreferences] =
-    useState<Preferences>(defaultPreferences);
-  const [loaded, setLoaded] = useState(false);
-
-  const accent = accentClasses[preferences.accent];
-
-  useEffect(() => {
-    // El storage del navegador solo existe en el cliente, por eso se lee despues del montaje.
-    queueMicrotask(() => {
-      const storedProducts = window.localStorage.getItem(PRODUCTS_KEY);
-      const storedDraft = window.sessionStorage.getItem(DRAFT_KEY);
-      const storedFilter = window.sessionStorage.getItem(FILTER_KEY);
-
-      setProducts(parseJson(storedProducts, demoProducts));
-      setForm(parseJson(storedDraft, emptyForm));
-      setFilter(storedFilter ?? "");
-      setPreferences(readPreferences());
-      setLoaded(true);
-    });
-  }, []);
-
-  useEffect(() => {
-    // localStorage persiste incluso al cerrar y abrir de nuevo el navegador.
-    if (loaded) {
-      window.localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products));
-    }
-  }, [loaded, products]);
-
-  useEffect(() => {
-    // sessionStorage es ideal para borradores temporales de la pestana actual.
-    if (loaded) {
-      window.sessionStorage.setItem(DRAFT_KEY, JSON.stringify(form));
-    }
-  }, [form, loaded]);
-
-  useEffect(() => {
-    // El filtro tambien es estado temporal: se mantiene al recargar, pero no entre sesiones.
-    if (loaded) {
-      window.sessionStorage.setItem(FILTER_KEY, filter);
-    }
-  }, [filter, loaded]);
-
-  useEffect(() => {
-    // Las preferencias quedan en cookie para simular configuracion liviana del usuario.
-    if (loaded) {
-      setCookie(PREF_COOKIE, JSON.stringify(preferences), 45);
-    }
-  }, [loaded, preferences]);
-
-  const filteredProducts = useMemo(() => {
-    const value = filter.trim().toLowerCase();
-
-    if (!value) {
-      return products;
-    }
-
-    return products.filter((product) =>
-      [product.name, product.category].some((field) =>
-        field.toLowerCase().includes(value),
-      ),
-    );
-  }, [filter, products]);
-
-  const totalStock = products.reduce((sum, product) => sum + product.stock, 0);
-  const totalValue = products.reduce(
-    (sum, product) => sum + product.price * product.stock,
-    0,
+  // --- Hooks personalizados (almacenamiento del navegador) ---
+  const [resources, setResources, isResourcesLoaded] = useLocalStorage<Resource[]>(
+    RESOURCES_STORAGE_KEY,
+    demoResources
   );
 
-  function updateForm(field: keyof ProductForm, value: string) {
-    setForm((current) => ({ ...current, [field]: value }));
-  }
+  const [formDraft, setFormDraft, isDraftLoaded] = useSessionStorage<ResourceFormState>(
+    DRAFT_SESSION_KEY,
+    emptyForm
+  );
 
-  function resetForm() {
-    setForm(emptyForm);
+  const [searchQuery, setSearchQuery, isSearchLoaded] = useSessionStorage<string>(
+    FILTER_SEARCH_KEY,
+    ""
+  );
+
+  const [categoryFilter, setCategoryFilter, isCategoryFilterLoaded] = useSessionStorage<string>(
+    FILTER_CATEGORY_KEY,
+    ""
+  );
+
+  const [statusFilter, setStatusFilter, isStatusFilterLoaded] = useSessionStorage<string>(
+    FILTER_STATUS_KEY,
+    ""
+  );
+
+  const [sortBy, setSortBy, isSortLoaded] = useSessionStorage<string>(
+    FILTER_SORT_KEY,
+    "name_asc"
+  );
+
+  const [theme, setTheme, isThemeLoaded] = useCookie<'light' | 'dark'>(
+    PREF_THEME_COOKIE,
+    "light"
+  );
+
+  const [responsibleName, setResponsibleName, isUserLoaded] = useCookie<string>(
+    PREF_USER_COOKIE,
+    "Encargado Lab"
+  );
+
+  const [viewType, setViewType, isViewLoaded] = useCookie<'table' | 'cards'>(
+    PREF_VIEW_COOKIE,
+    "table"
+  );
+
+  // --- Estados locales del componente ---
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [formErrors, setFormErrors] = useState<ValidationErrors>({});
+  
+  // Estado para el modal de confirmación de eliminación
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+
+  // --- Sincronizar tema oscuro ---
+  useEffect(() => {
+    if (isThemeLoaded) {
+      if (theme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    }
+  }, [theme, isThemeLoaded]);
+
+  // --- Cargar borrador de edición al iniciar si corresponde ---
+  // Nota: Si el usuario estaba editando y refresca, sessionStorage conserva el borrador,
+  // pero el editingId (en memoria de React) se pierde. Así que si hay un borrador con datos
+  // pero sin ID activo, lo tratamos como creación de nuevo elemento.
+  
+  // --- Manejo del Formulario ---
+  const handleFormChange = (field: keyof ResourceFormState, value: any) => {
+    setFormDraft((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+    
+    // Limpiar el error específico del campo al editarlo
+    if (formErrors[field]) {
+      setFormErrors((prev) => {
+        const next = { ...prev };
+        delete next[field];
+        return next;
+      });
+    }
+  };
+
+  const handleEditClick = (resource: Resource) => {
+    setEditingId(resource.id);
+    setFormDraft({
+      name: resource.name,
+      category: resource.category,
+      quantity: resource.quantity,
+      status: resource.status,
+      location: resource.location,
+      responsible: resource.responsible || "",
+      registrationDate: resource.registrationDate,
+      description: resource.description || "",
+    });
+    setFormErrors({});
+    
+    // Hacer scroll suave hacia el formulario en móviles
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCancelEdit = () => {
     setEditingId(null);
-    window.sessionStorage.removeItem(DRAFT_KEY);
-  }
+    setFormDraft(emptyForm);
+    setFormErrors({});
+  };
 
-  function saveProduct(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
 
-    // Los inputs entregan texto; aqui normalizamos antes de guardar.
-    const cleanName = form.name.trim();
-    const cleanCategory = form.category.trim();
-    const price = Number(form.price);
-    const stock = Number(form.stock);
-
-    if (!cleanName || !cleanCategory || price <= 0 || stock < 0) {
+    const { isValid, errors } = validateResourceForm(formDraft);
+    if (!isValid) {
+      setFormErrors(errors);
       return;
     }
 
-    // Si hay un id en edicion actualizamos; si no, creamos un nuevo registro.
     if (editingId) {
-      setProducts((current) =>
-        current.map((product) =>
-          product.id === editingId
+      // Modificar recurso existente
+      setResources((current) =>
+        current.map((res) =>
+          res.id === editingId
             ? {
-                ...product,
-                name: cleanName,
-                category: cleanCategory,
-                price,
-                stock,
+                ...res,
+                name: formDraft.name.trim(),
+                category: formDraft.category,
+                quantity: Number(formDraft.quantity),
+                status: formDraft.status,
+                location: formDraft.location.trim(),
+                responsible: formDraft.responsible?.trim() || undefined,
+                registrationDate: formDraft.registrationDate,
+                description: formDraft.description?.trim() || undefined,
               }
-            : product,
-        ),
+            : res
+        )
       );
+      setEditingId(null);
     } else {
-      setProducts((current) => [
-        {
-          id: crypto.randomUUID(),
-          name: cleanName,
-          category: cleanCategory,
-          price,
-          stock,
-        },
-        ...current,
-      ]);
+      // Crear nuevo recurso
+      const newResource: Resource = {
+        id: `rec-${Date.now().toString().slice(-4)}-${Math.floor(100 + Math.random() * 900)}`,
+        name: formDraft.name.trim(),
+        category: formDraft.category,
+        quantity: Number(formDraft.quantity),
+        status: formDraft.status,
+        location: formDraft.location.trim(),
+        responsible: formDraft.responsible?.trim() || undefined,
+        registrationDate: formDraft.registrationDate,
+        description: formDraft.description?.trim() || undefined,
+      };
+      setResources((current) => [newResource, ...current]);
     }
 
-    resetForm();
-  }
+    // Resetear formulario y borrar borrador temporal
+    setFormDraft(emptyForm);
+    setFormErrors({});
+  };
 
-  function editProduct(product: Product) {
-    setEditingId(product.id);
-    setForm({
-      name: product.name,
-      category: product.category,
-      price: String(product.price),
-      stock: String(product.stock),
+  // --- Manejo de la Eliminación con Modal ---
+  const handleDeleteClick = (id: string, name: string) => {
+    setDeleteTarget({ id, name });
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (deleteTarget) {
+      setResources((current) => current.filter((res) => res.id !== deleteTarget.id));
+      if (editingId === deleteTarget.id) {
+        handleCancelEdit();
+      }
+      setIsDeleteModalOpen(false);
+      setDeleteTarget(null);
+    }
+  };
+
+  const handleCloseDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setDeleteTarget(null);
+  };
+
+  // --- Restaurar datos de prueba ---
+  const handleResetDemo = () => {
+    setResources(demoResources);
+    setSearchQuery("");
+    setCategoryFilter("");
+    setStatusFilter("");
+    setSortBy("name_asc");
+    handleCancelEdit();
+  };
+
+  // --- Filtrado y Ordenación de Recursos ---
+  const filteredAndSortedResources = useMemo(() => {
+    let result = [...resources];
+
+    // 1. Filtrar por búsqueda de texto
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter(
+        (res) =>
+          res.name.toLowerCase().includes(q) ||
+          res.location.toLowerCase().includes(q) ||
+          (res.responsible && res.responsible.toLowerCase().includes(q)) ||
+          (res.description && res.description.toLowerCase().includes(q))
+      );
+    }
+
+    // 2. Filtrar por categoría
+    if (categoryFilter) {
+      result = result.filter((res) => res.category === categoryFilter);
+    }
+
+    // 3. Filtrar por estado
+    if (statusFilter) {
+      result = result.filter((res) => res.status === statusFilter);
+    }
+
+    // 4. Ordenar resultados
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case "name_asc":
+          return a.name.localeCompare(b.name);
+        case "name_desc":
+          return b.name.localeCompare(a.name);
+        case "quantity_desc":
+          return b.quantity - a.quantity;
+        case "quantity_asc":
+          return a.quantity - b.quantity;
+        case "date_desc":
+          return new Date(b.registrationDate).getTime() - new Date(a.registrationDate).getTime();
+        case "date_asc":
+          return new Date(a.registrationDate).getTime() - new Date(b.registrationDate).getTime();
+        default:
+          return 0;
+      }
     });
-  }
 
-  function deleteProduct(id: string) {
-    setProducts((current) => current.filter((product) => product.id !== id));
+    return result;
+  }, [resources, searchQuery, categoryFilter, statusFilter, sortBy]);
 
-    if (editingId === id) {
-      resetForm();
-    }
-  }
+  // --- Estadísticas en tiempo real ---
+  const stats = useMemo(() => {
+    const totalItems = resources.length;
+    const totalQuantity = resources.reduce((acc, curr) => acc + curr.quantity, 0);
+    const availableQuantity = resources
+      .filter((res) => res.status === "Disponible")
+      .reduce((acc, curr) => acc + curr.quantity, 0);
+    const maintenanceQuantity = resources
+      .filter((res) => res.status === "En mantención")
+      .reduce((acc, curr) => acc + curr.quantity, 0);
 
-  function resetDemo() {
-    // Permite volver al estado inicial y limpiar datos temporales de sessionStorage.
-    setProducts(demoProducts);
-    setFilter("");
-    resetForm();
-    window.localStorage.setItem(PRODUCTS_KEY, JSON.stringify(demoProducts));
-    window.sessionStorage.removeItem(FILTER_KEY);
-  }
+    return {
+      totalItems,
+      totalQuantity,
+      availableQuantity,
+      maintenanceQuantity,
+    };
+  }, [resources]);
 
-  return (
-    <main className="min-h-screen bg-[#f7f3ea] text-zinc-950">
-      <section className="border-b border-zinc-200 bg-white">
-        <div className="mx-auto flex max-w-7xl flex-col gap-8 px-5 py-8 sm:px-8 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl">
-            <p className={`text-sm font-semibold uppercase ${accent.text}`}>
-              Next.js + Web Storage
-            </p>
-            <h1 className="mt-3 text-4xl font-semibold tracking-normal text-zinc-950 sm:text-5xl">
-              CRUD de productos con almacenamiento del navegador
-            </h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-zinc-600">
-              La lista vive en localStorage, las preferencias quedan en cookies
-              y el borrador del formulario se conserva en sessionStorage solo
-              durante esta pestaña.
-            </p>
-          </div>
+  // Evitar desajustes visuales durante la carga de hidratación de Next.js
+  const isLoaded = 
+    isResourcesLoaded && 
+    isDraftLoaded && 
+    isSearchLoaded && 
+    isCategoryFilterLoaded && 
+    isStatusFilterLoaded && 
+    isSortLoaded && 
+    isThemeLoaded && 
+    isUserLoaded && 
+    isViewLoaded;
 
-          <div
-            className={`grid gap-3 rounded-lg border p-4 sm:grid-cols-3 ${accent.soft}`}
-          >
-            <StorageBadge title="localStorage" value={`${products.length} items`} />
-            <StorageBadge title="cookies" value={preferences.userName} />
-            <StorageBadge
-              title="sessionStorage"
-              value={form.name ? "borrador activo" : "sin borrador"}
-            />
-          </div>
+  if (!isLoaded) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950 transition-colors">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-zinc-200 border-t-teal-600 dark:border-zinc-800 dark:border-t-teal-500" />
+          <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+            Cargando sistema de inventario...
+          </p>
         </div>
-      </section>
+      </div>
+    );
+  }
 
-      <section className="mx-auto grid max-w-7xl gap-6 px-5 py-6 sm:px-8 lg:grid-cols-[380px_1fr]">
-        <aside className="space-y-6">
-          <form
-            onSubmit={saveProduct}
-            className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-semibold">
-                  {editingId ? "Editar producto" : "Nuevo producto"}
-                </h2>
-                <p className="mt-1 text-sm text-zinc-500">
-                  Persistido como arreglo JSON en localStorage.
-                </p>
-              </div>
-              {editingId ? (
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium hover:bg-zinc-50"
-                >
-                  Cancelar
-                </button>
-              ) : null}
-            </div>
-
-            <div className="mt-5 grid gap-4">
-              <TextInput
-                label="Nombre"
-                value={form.name}
-                onChange={(value) => updateForm("name", value)}
-                placeholder="Ej: Teclado mecanico"
-                accent={accent.ring}
-              />
-              <TextInput
-                label="Categoria"
-                value={form.category}
-                onChange={(value) => updateForm("category", value)}
-                placeholder="Ej: Tecnologia"
-                accent={accent.ring}
-              />
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <TextInput
-                  label="Precio"
-                  type="number"
-                  value={form.price}
-                  onChange={(value) => updateForm("price", value)}
-                  placeholder="12990"
-                  accent={accent.ring}
-                />
-                <TextInput
-                  label="Stock"
-                  type="number"
-                  value={form.stock}
-                  onChange={(value) => updateForm("stock", value)}
-                  placeholder="10"
-                  accent={accent.ring}
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className={`mt-5 w-full rounded-md px-4 py-3 text-sm font-semibold text-white transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${accent.button}`}
-            >
-              {editingId ? "Guardar cambios" : "Crear producto"}
-            </button>
-          </form>
-
-          <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
-            <h2 className="text-xl font-semibold">Preferencias</h2>
-            <p className="mt-1 text-sm text-zinc-500">
-              Buen caso para cookies: configuracion liviana que puede viajar en
-              futuras peticiones.
-            </p>
-
-            <div className="mt-5 grid gap-4">
-              <TextInput
-                label="Nombre de usuario"
-                value={preferences.userName}
-                onChange={(value) =>
-                  setPreferences((current) => ({
-                    ...current,
-                    userName: value || "Invitado",
-                  }))
-                }
-                accent={accent.ring}
-              />
-
-              <label className="grid gap-2 text-sm font-medium text-zinc-700">
-                Color
-                <select
-                  value={preferences.accent}
-                  onChange={(event) =>
-                    setPreferences((current) => ({
-                      ...current,
-                      accent: event.target.value as Preferences["accent"],
-                    }))
-                  }
-                  className={`rounded-md border border-zinc-300 bg-white px-3 py-2 outline-none transition focus:ring-4 ${accent.ring}`}
-                >
-                  <option value="teal">Verde</option>
-                  <option value="rose">Rosa</option>
-                  <option value="amber">Amarillo</option>
-                </select>
-              </label>
-
-              <label className="flex items-center justify-between gap-4 rounded-md border border-zinc-200 px-3 py-3 text-sm font-medium text-zinc-700">
-                Vista compacta
-                <input
-                  type="checkbox"
-                  checked={preferences.compact}
-                  onChange={(event) =>
-                    setPreferences((current) => ({
-                      ...current,
-                      compact: event.target.checked,
-                    }))
-                  }
-                  className="h-5 w-5 accent-zinc-900"
-                />
-              </label>
-            </div>
-          </section>
-        </aside>
-
-        <section className="space-y-6">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <Metric label="Productos" value={String(products.length)} />
-            <Metric label="Unidades" value={String(totalStock)} />
-            <Metric label="Inventario" value={money(totalValue)} />
-          </div>
-
-          <div className="rounded-lg border border-zinc-200 bg-white shadow-sm">
-            <div className="flex flex-col gap-4 border-b border-zinc-200 p-5 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <h2 className="text-xl font-semibold">
-                  Hola, {preferences.userName}
-                </h2>
-                <p className="mt-1 text-sm text-zinc-500">
-                  El filtro se guarda en sessionStorage y se pierde al cerrar la
-                  pestaña.
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <input
-                  value={filter}
-                  onChange={(event) => setFilter(event.target.value)}
-                  placeholder="Filtrar por nombre o categoria"
-                  className={`min-h-11 rounded-md border border-zinc-300 px-3 text-sm outline-none transition focus:ring-4 ${accent.ring}`}
-                />
-                <button
-                  type="button"
-                  onClick={resetDemo}
-                  className="min-h-11 rounded-md border border-zinc-300 px-4 text-sm font-semibold hover:bg-zinc-50"
-                >
-                  Restaurar demo
-                </button>
-              </div>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] border-collapse text-left">
-                <thead className="bg-zinc-50 text-xs uppercase text-zinc-500">
-                  <tr>
-                    <th className="px-5 py-3 font-semibold">Producto</th>
-                    <th className="px-5 py-3 font-semibold">Categoria</th>
-                    <th className="px-5 py-3 font-semibold">Precio</th>
-                    <th className="px-5 py-3 font-semibold">Stock</th>
-                    <th className="px-5 py-3 text-right font-semibold">
-                      Acciones
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredProducts.map((product) => (
-                    <tr
-                      key={product.id}
-                      className="border-t border-zinc-100 align-middle"
-                    >
-                      <td
-                        className={`px-5 font-medium text-zinc-950 ${
-                          preferences.compact ? "py-3" : "py-5"
-                        }`}
-                      >
-                        {product.name}
-                      </td>
-                      <td className="px-5 text-zinc-600">{product.category}</td>
-                      <td className="px-5 text-zinc-600">
-                        {money(product.price)}
-                      </td>
-                      <td className="px-5 text-zinc-600">{product.stock}</td>
-                      <td className="px-5">
-                        <div className="flex justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={() => editProduct(product)}
-                            className="rounded-md border border-zinc-300 px-3 py-2 text-sm font-medium hover:bg-zinc-50"
-                          >
-                            Editar
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => deleteProduct(product.id)}
-                            className="rounded-md border border-red-200 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
-                          >
-                            Eliminar
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {filteredProducts.length === 0 ? (
-              <div className="p-8 text-center text-sm text-zinc-500">
-                No hay productos para el filtro actual.
-              </div>
-            ) : null}
-          </div>
-
-          <section className="grid gap-4 lg:grid-cols-3">
-            <StorageNote
-              title="localStorage"
-              text="Ideal para datos persistentes del cliente, como este inventario de ejemplo. Sigue disponible despues de cerrar el navegador."
-            />
-            <StorageNote
-              title="Cookies"
-              text="Utiles para preferencias pequenas o informacion que el servidor podria necesitar recibir con cada request."
-            />
-            <StorageNote
-              title="sessionStorage"
-              text="Perfecto para estado temporal de una pestana: filtros, borradores y pasos de un flujo que no deben quedar permanentes."
-            />
-          </section>
-        </section>
-      </section>
-    </main>
-  );
-}
-
-function TextInput({
-  label,
-  value,
-  onChange,
-  placeholder,
-  type = "text",
-  accent,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  type?: "text" | "number";
-  accent: string;
-}) {
   return (
-    <label className="grid gap-2 text-sm font-medium text-zinc-700">
-      {label}
-      <input
-        type={type}
-        value={value}
-        min={type === "number" ? "0" : undefined}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder}
-        className={`min-h-11 w-full min-w-0 rounded-md border border-zinc-300 px-3 text-sm outline-none transition focus:ring-4 ${accent} ${type === "number" ? "number-input" : ""}`}
+    <div className="min-h-screen flex flex-col bg-[#fcfbfa] text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50 transition-colors duration-250">
+      
+      {/* Encabezado */}
+      <Header
+        userName={responsibleName}
+        onUserNameChange={setResponsibleName}
+        theme={theme}
+        onThemeToggle={() => setTheme(theme === 'light' ? 'dark' : 'light')}
       />
-    </label>
-  );
-}
 
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
-      <p className="text-sm font-medium text-zinc-500">{label}</p>
-      <p className="mt-2 text-2xl font-semibold text-zinc-950">{value}</p>
+      {/* Cuerpo Principal */}
+      <main className="mx-auto w-full max-w-7xl flex-1 px-5 py-6 sm:px-8">
+        
+        {/* Fila de Estadísticas (Dashboard Panel) */}
+        <section className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:gap-4.5 mb-6">
+          <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-850 dark:bg-zinc-900 transition-colors">
+            <span className="block text-xs font-semibold uppercase text-zinc-400 dark:text-zinc-500">Recursos Registrados</span>
+            <span className="mt-1 block text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
+              {stats.totalItems} <span className="text-xs font-normal text-zinc-500">tipos</span>
+            </span>
+          </div>
+          <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-850 dark:bg-zinc-900 transition-colors">
+            <span className="block text-xs font-semibold uppercase text-zinc-400 dark:text-zinc-500">Stock Total</span>
+            <span className="mt-1 block text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
+              {stats.totalQuantity} <span className="text-xs font-normal text-zinc-500">unidades</span>
+            </span>
+          </div>
+          <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-850 dark:bg-zinc-900 transition-colors">
+            <span className="block text-xs font-semibold uppercase text-zinc-400 dark:text-zinc-500">Stock Disponible</span>
+            <span className="mt-1 block text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-450">
+              {stats.availableQuantity} <span className="text-xs font-normal text-zinc-500">disp.</span>
+            </span>
+          </div>
+          <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-850 dark:bg-zinc-900 transition-colors">
+            <span className="block text-xs font-semibold uppercase text-zinc-400 dark:text-zinc-500">En Mantención</span>
+            <span className="mt-1 block text-2xl font-bold tracking-tight text-amber-600 dark:text-amber-450">
+              {stats.maintenanceQuantity} <span className="text-xs font-normal text-zinc-500">manten.</span>
+            </span>
+          </div>
+        </section>
+
+        {/* Layout en dos columnas */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[380px_1fr]">
+          
+          {/* Columna Izquierda: Formulario y Preferencias de Almacenamiento */}
+          <aside className="space-y-6">
+            <ResourceForm
+              formState={formDraft}
+              onFormChange={handleFormChange}
+              onSubmit={handleSubmit}
+              onCancel={handleCancelEdit}
+              editingId={editingId}
+              errors={formErrors}
+            />
+
+            {/* Panel Informativo de Almacenamiento */}
+            <section className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 transition-colors">
+              <h3 className="font-bold text-zinc-900 dark:text-zinc-50 text-sm">Estado del Almacenamiento</h3>
+              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400 leading-normal">
+                Uso de almacenamiento del navegador para este laboratorio:
+              </p>
+              
+              <div className="mt-4 space-y-3.5 text-xs">
+                <div className="flex items-start gap-2.5">
+                  <span className="inline-flex h-4.5 w-18 shrink-0 items-center justify-center rounded bg-teal-100 text-[10px] font-bold text-teal-850 dark:bg-teal-950/45 dark:text-teal-400">
+                    Local Storage
+                  </span>
+                  <div>
+                    <span className="font-semibold text-zinc-850 dark:text-zinc-205">lab_resources</span>
+                    <p className="text-[10px] text-zinc-450 dark:text-zinc-400 leading-normal">Guarda la lista del CRUD ({resources.length} recursos). Persiste al reiniciar navegador.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2.5">
+                  <span className="inline-flex h-4.5 w-18 shrink-0 items-center justify-center rounded bg-sky-100 text-[10px] font-bold text-sky-850 dark:bg-sky-950/45 dark:text-sky-400">
+                    Session Storage
+                  </span>
+                  <div>
+                    <span className="font-semibold text-zinc-850 dark:text-zinc-205">lab_resource_draft / lab_filter_*</span>
+                    <p className="text-[10px] text-zinc-450 dark:text-zinc-400 leading-normal">Guarda temporalmente el borrador e inputs de búsqueda. Se destruye al cerrar la pestaña.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-2.5">
+                  <span className="inline-flex h-4.5 w-18 shrink-0 items-center justify-center rounded bg-amber-100 text-[10px] font-bold text-amber-850 dark:bg-amber-950/45 dark:text-amber-400">
+                    Cookies
+                  </span>
+                  <div>
+                    <span className="font-semibold text-zinc-850 dark:text-zinc-205">lab_theme / lab_user_preferences</span>
+                    <p className="text-[10px] text-zinc-450 dark:text-zinc-400 leading-normal">Guarda las preferencias visuales (modo oscuro, nombre, vista) y viaja en las peticiones HTTP.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-5 border-t border-zinc-100 pt-4 dark:border-zinc-800">
+                <button
+                  type="button"
+                  onClick={handleResetDemo}
+                  className="w-full rounded-lg border border-zinc-300 bg-white py-2 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 transition"
+                >
+                  Restaurar Datos de Prueba
+                </button>
+              </div>
+            </section>
+          </aside>
+
+          {/* Columna Derecha: Búsqueda, Filtros y Lista */}
+          <section className="space-y-4">
+            
+            {/* Buscador de Recursos */}
+            <SearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+            />
+
+            {/* Filtros de Categorías, Estados y Ordenamiento */}
+            <FilterCategory
+              selectedCategory={categoryFilter}
+              onCategoryChange={setCategoryFilter}
+              selectedStatus={statusFilter}
+              onStatusChange={setStatusFilter}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+              viewType={viewType}
+              onViewTypeChange={setViewType}
+            />
+
+            {/* Listado de Recursos (Cards o Tabla) */}
+            <div className="pt-2">
+              <ResourceList
+                resources={filteredAndSortedResources}
+                viewType={viewType}
+                onEdit={handleEditClick}
+                onDeleteClick={handleDeleteClick}
+              />
+            </div>
+
+            {/* Mensaje de resultados filtrados */}
+            {filteredAndSortedResources.length > 0 && (
+              <p className="text-[11px] text-zinc-400 dark:text-zinc-500 text-right">
+                Mostrando {filteredAndSortedResources.length} de {resources.length} recursos registrados en el inventario.
+              </p>
+            )}
+
+          </section>
+
+        </div>
+
+      </main>
+
+      {/* ConfirmDeleteModal */}
+      <ConfirmDeleteModal
+        isOpen={isDeleteModalOpen}
+        resourceName={deleteTarget?.name || ""}
+        onConfirm={handleConfirmDelete}
+        onClose={handleCloseDeleteModal}
+      />
+
+      {/* Pie de Página */}
+      <footer className="border-t border-zinc-200/80 bg-zinc-50/50 py-6 dark:border-zinc-800 dark:bg-zinc-950 transition-colors mt-12">
+        <div className="mx-auto max-w-7xl px-5 text-center sm:px-8">
+          <p className="text-xs text-zinc-400 dark:text-zinc-500">
+            Desarrollo de Aplicaciones Web SPA con React e Integración de IA — Evaluación Práctica N.º 4
+          </p>
+          <p className="mt-1.5 text-[10px] text-zinc-400/80 dark:text-zinc-650">
+            Persistencia garantizada localmente a nivel de cliente. Diseño enfocado en experiencia de usuario accesible y moderna.
+          </p>
+        </div>
+      </footer>
+
     </div>
-  );
-}
-
-function StorageBadge({ title, value }: { title: string; value: string }) {
-  return (
-    <div className="min-w-0">
-      <p className="text-xs font-semibold uppercase">{title}</p>
-      <p className="mt-1 truncate text-sm">{value}</p>
-    </div>
-  );
-}
-
-function StorageNote({ title, text }: { title: string; text: string }) {
-  return (
-    <article className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
-      <h3 className="font-semibold text-zinc-950">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-zinc-600">{text}</p>
-    </article>
   );
 }
