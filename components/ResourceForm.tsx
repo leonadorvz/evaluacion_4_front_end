@@ -5,7 +5,7 @@ import { AISuggestion } from './AISuggestion';
 
 interface ResourceFormProps {
   formState: ResourceFormState;
-  onFormChange: (field: keyof ResourceFormState, value: any) => void;
+  onFormChange: (field: keyof ResourceFormState, value: string | number) => void;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
   editingId: string | null;

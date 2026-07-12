@@ -6,15 +6,17 @@ export function useSessionStorage<T>(key: string, initialValue: T) {
 
   // Load from sessionStorage on mount (client-side only)
   useEffect(() => {
-    try {
-      const item = window.sessionStorage.getItem(key);
-      if (item) {
-        setStoredValue(JSON.parse(item));
+    queueMicrotask(() => {
+      try {
+        const item = window.sessionStorage.getItem(key);
+        if (item) {
+          setStoredValue(JSON.parse(item));
+        }
+      } catch (error) {
+        console.error(`Error reading sessionStorage key "${key}":`, error);
       }
-    } catch (error) {
-      console.error(`Error reading sessionStorage key "${key}":`, error);
-    }
-    setIsLoaded(true);
+      setIsLoaded(true);
+    });
   }, [key]);
 
   const setValue = (value: T | ((val: T) => T)) => {

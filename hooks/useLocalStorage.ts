@@ -6,15 +6,17 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
 
   // Load from localStorage on mount (client-side only)
   useEffect(() => {
-    try {
-      const item = window.localStorage.getItem(key);
-      if (item) {
-        setStoredValue(JSON.parse(item));
+    queueMicrotask(() => {
+      try {
+        const item = window.localStorage.getItem(key);
+        if (item) {
+          setStoredValue(JSON.parse(item));
+        }
+      } catch (error) {
+        console.error(`Error reading localStorage key "${key}":`, error);
       }
-    } catch (error) {
-      console.error(`Error reading localStorage key "${key}":`, error);
-    }
-    setIsLoaded(true);
+      setIsLoaded(true);
+    });
   }, [key]);
 
   // Return a wrapped version of useState's setter function that persists the new value to localStorage.

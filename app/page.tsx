@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { Resource, ResourceFormState, CATEGORIES, STATUSES } from "@/types/Resource";
+import { Resource, ResourceFormState } from "@/types/Resource";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useSessionStorage } from "@/hooks/useSessionStorage";
 import { useCookie } from "@/hooks/useCookie";
@@ -167,7 +167,7 @@ export default function Home() {
   // pero sin ID activo, lo tratamos como creación de nuevo elemento.
   
   // --- Manejo del Formulario ---
-  const handleFormChange = (field: keyof ResourceFormState, value: any) => {
+  const handleFormChange = (field: keyof ResourceFormState, value: string | number) => {
     setFormDraft((prev) => ({
       ...prev,
       [field]: value,

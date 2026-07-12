@@ -27,7 +27,7 @@ export function validateResourceForm(form: ResourceFormState): {
   // Validate Category
   if (!form.category) {
     errors.category = "Debe seleccionar una categoría.";
-  } else if (!CATEGORIES.includes(form.category as any)) {
+  } else if (!(CATEGORIES as readonly string[]).includes(form.category)) {
     errors.category = "La categoría seleccionada no es válida.";
   }
 
@@ -46,7 +46,7 @@ export function validateResourceForm(form: ResourceFormState): {
   // Validate Status
   if (!form.status) {
     errors.status = "El estado es obligatorio.";
-  } else if (!STATUSES.includes(form.status as any)) {
+  } else if (!(STATUSES as readonly string[]).includes(form.status)) {
     errors.status = "El estado seleccionado no es válido.";
   }
 

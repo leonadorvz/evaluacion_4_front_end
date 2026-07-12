@@ -26,16 +26,18 @@ export function useCookie<T>(name: string, initialValue: T) {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const stored = getCookie(name);
-    if (stored !== null) {
-      try {
-        setValueState(JSON.parse(stored) as T);
-      } catch {
-        // Fallback for primitive string cookies
-        setValueState(stored as unknown as T);
+    queueMicrotask(() => {
+      const stored = getCookie(name);
+      if (stored !== null) {
+        try {
+          setValueState(JSON.parse(stored) as T);
+        } catch {
+          // Fallback for primitive string cookies
+          setValueState(stored as unknown as T);
+        }
       }
-    }
-    setIsLoaded(true);
+      setIsLoaded(true);
+    });
   }, [name]);
 
   const setValue = (newValue: T, days = 30) => {

@@ -28,7 +28,7 @@ export function ConfirmDeleteModal({
         <div className="flex flex-col gap-2">
           <h3 className="text-lg font-semibold">¿Confirmar eliminación?</h3>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            ¿Está seguro de que desea eliminar el recurso tecnológico <strong className="text-zinc-800 dark:text-zinc-200">"{resourceName}"</strong>? Esta acción no se puede deshacer.
+            ¿Está seguro de que desea eliminar el recurso tecnológico <strong className="text-zinc-800 dark:text-zinc-200">&ldquo;{resourceName}&rdquo;</strong>? Esta acción no se puede deshacer.
           </p>
         </div>
         
