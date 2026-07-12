@@ -8,7 +8,7 @@ El objetivo principal es aplicar y demostrar el uso correcto de **localStorage**
 
 ## 👥 Integrantes
 - **Leonardo R.**
-- **Nicolás**
+- **Nicolás F**
 
 ---
 
