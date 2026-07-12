@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CRUD con almacenamiento web",
+  title: "LabResource - Gestión de Recursos Tecnológicos de Laboratorio",
   description:
-    "Ejemplo en Next.js de localStorage, cookies y sessionStorage con un CRUD.",
+    "Sistema SPA desarrollado en Next.js para gestionar los recursos tecnológicos de un laboratorio con soporte de localStorage, sessionStorage y cookies.",
 };
 
 export default function RootLayout({
