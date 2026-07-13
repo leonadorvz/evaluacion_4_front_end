@@ -41,8 +41,14 @@ export function ResourceCard({
     }
   };
 
+  let borderLeftClass = "border-l-4 ";
+  if (resource.status === 'Disponible') borderLeftClass += "border-l-emerald-500";
+  else if (resource.status === 'En uso') borderLeftClass += "border-l-sky-500";
+  else if (resource.status === 'En mantención') borderLeftClass += "border-l-amber-500";
+  else borderLeftClass += "border-l-zinc-300";
+
   return (
-    <div className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-zinc-200 bg-white p-5 shadow-sm hover:shadow-md transition dark:border-zinc-800 dark:bg-zinc-900/70 text-zinc-950 dark:text-zinc-50">
+    <div className={`group relative flex flex-col justify-between overflow-hidden rounded-xl border border-zinc-200/80 bg-white p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 dark:border-zinc-800/80 dark:bg-zinc-900/70 text-zinc-950 dark:text-zinc-50 ${borderLeftClass}`}>
       
       <div>
         {/* Header inside Card */}
@@ -56,7 +62,7 @@ export function ResourceCard({
         </div>
 
         {/* Title */}
-        <h3 className="mt-3.5 text-base font-bold text-zinc-900 group-hover:text-teal-600 dark:text-zinc-100 dark:group-hover:text-teal-400 transition-colors">
+        <h3 className="mt-3.5 text-base font-bold text-zinc-900 group-hover:text-indigo-650 dark:text-zinc-100 dark:group-hover:text-indigo-400 transition-colors">
           {resource.name}
         </h3>
 
@@ -97,7 +103,7 @@ export function ResourceCard({
         <button
           type="button"
           onClick={() => onEdit(resource)}
-          className="inline-flex items-center gap-1 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 transition"
+          className="inline-flex items-center gap-1 rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-semibold text-zinc-700 hover:bg-indigo-50/50 hover:text-indigo-600 hover:border-indigo-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-indigo-950/20 dark:hover:text-indigo-400 dark:hover:border-indigo-900/50 transition-all"
         >
           Editar
         </button>
