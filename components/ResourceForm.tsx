@@ -23,7 +23,7 @@ export function ResourceForm({
   return (
     <form
       onSubmit={onSubmit}
-      className="space-y-5 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 transition-colors"
+      className="space-y-5 rounded-2xl border border-zinc-200/80 bg-white p-5.5 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/90 transition-colors border-t-4 border-t-indigo-600"
     >
       <div>
         <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
@@ -49,7 +49,7 @@ export function ResourceForm({
             className={`rounded-lg border px-3 py-2 text-sm outline-none transition focus:ring-4 ${
               errors.name
                 ? 'border-red-300 focus:border-red-500 focus:ring-red-500/15 dark:border-red-900/60'
-                : 'border-zinc-300 focus:border-teal-500 focus:ring-teal-500/10 dark:border-zinc-700 dark:bg-zinc-800'
+                : 'border-zinc-300 focus:border-indigo-500 focus:ring-indigo-500/10 dark:border-zinc-700 dark:bg-zinc-800'
             }`}
           />
           {errors.name && (
@@ -73,7 +73,7 @@ export function ResourceForm({
               className={`rounded-lg border px-3 py-2 text-sm outline-none bg-white transition focus:ring-4 dark:bg-zinc-800 ${
                 errors.category
                   ? 'border-red-300 focus:border-red-500 focus:ring-red-500/15 dark:border-red-900/60'
-                  : 'border-zinc-300 focus:border-teal-500 focus:ring-teal-500/10 dark:border-zinc-700'
+                  : 'border-zinc-300 focus:border-indigo-500 focus:ring-indigo-500/10 dark:border-zinc-700'
               }`}
             >
               <option value="">Seleccionar...</option>
@@ -101,7 +101,7 @@ export function ResourceForm({
               className={`rounded-lg border px-3 py-2 text-sm outline-none bg-white transition focus:ring-4 dark:bg-zinc-800 ${
                 errors.status
                   ? 'border-red-300 focus:border-red-500 focus:ring-red-500/15 dark:border-red-900/60'
-                  : 'border-zinc-300 focus:border-teal-500 focus:ring-teal-500/10 dark:border-zinc-700'
+                  : 'border-zinc-300 focus:border-indigo-500 focus:ring-indigo-500/10 dark:border-zinc-700'
               }`}
             >
               {STATUSES.map((st) => (
@@ -139,7 +139,7 @@ export function ResourceForm({
               className={`rounded-lg border px-3 py-2 text-sm outline-none transition focus:ring-4 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
                 errors.quantity
                   ? 'border-red-300 focus:border-red-500 focus:ring-red-500/15 dark:border-red-900/60'
-                  : 'border-zinc-300 focus:border-teal-500 focus:ring-teal-500/10 dark:border-zinc-700 dark:bg-zinc-800'
+                  : 'border-zinc-300 focus:border-indigo-500 focus:ring-indigo-500/10 dark:border-zinc-700 dark:bg-zinc-800'
               }`}
             />
             {errors.quantity && (
@@ -162,7 +162,7 @@ export function ResourceForm({
               className={`rounded-lg border px-3 py-2 text-sm outline-none transition focus:ring-4 ${
                 errors.location
                   ? 'border-red-300 focus:border-red-500 focus:ring-red-500/15 dark:border-red-900/60'
-                  : 'border-zinc-300 focus:border-teal-500 focus:ring-teal-500/10 dark:border-zinc-700 dark:bg-zinc-800'
+                  : 'border-zinc-300 focus:border-indigo-500 focus:ring-indigo-500/10 dark:border-zinc-700 dark:bg-zinc-800'
               }`}
             />
             {errors.location && (
@@ -187,7 +187,7 @@ export function ResourceForm({
               value={formState.responsible || ''}
               onChange={(e) => onFormChange('responsible', e.target.value)}
               placeholder="Ej. Encargado TIC"
-              className="rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none bg-white transition focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 dark:border-zinc-700 dark:bg-zinc-800"
+              className="rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none bg-white transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:border-zinc-700 dark:bg-zinc-800"
             />
           </div>
 
@@ -203,7 +203,7 @@ export function ResourceForm({
               className={`rounded-lg border px-3 py-2 text-sm outline-none transition focus:ring-4 dark:bg-zinc-800 ${
                 errors.registrationDate
                   ? 'border-red-300 focus:border-red-500 focus:ring-red-500/15 dark:border-red-900/60'
-                  : 'border-zinc-300 focus:border-teal-500 focus:ring-teal-500/10 dark:border-zinc-700'
+                  : 'border-zinc-300 focus:border-indigo-500 focus:ring-indigo-500/10 dark:border-zinc-700'
               }`}
             />
             {errors.registrationDate && (
@@ -225,7 +225,7 @@ export function ResourceForm({
             onChange={(e) => onFormChange('description', e.target.value)}
             placeholder="Ingrese observaciones sobre el recurso..."
             rows={2}
-            className="rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none bg-white transition focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 dark:border-zinc-700 dark:bg-zinc-800"
+            className="rounded-lg border border-zinc-300 px-3 py-2 text-sm outline-none bg-white transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 dark:border-zinc-700 dark:bg-zinc-800"
           />
         </div>
 
@@ -241,7 +241,7 @@ export function ResourceForm({
       <div className="flex items-center gap-3 pt-2">
         <button
           type="submit"
-          className="flex-1 rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-700 active:bg-teal-800 transition shadow-sm"
+          className="flex-1 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white hover:from-indigo-700 hover:to-violet-700 active:scale-[0.98] transition shadow-md shadow-indigo-500/10"
         >
           {editingId ? 'Guardar Cambios' : 'Registrar Recurso'}
         </button>
