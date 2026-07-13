@@ -27,12 +27,12 @@ export function Header({
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b border-zinc-200/80 bg-white/80 backdrop-blur-md dark:border-zinc-800/80 dark:bg-zinc-950/80 transition-colors">
-      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+    <header className="sticky top-0 z-40 border-b border-indigo-100/40 bg-white/70 backdrop-blur-md dark:border-zinc-800/80 dark:bg-zinc-950/70 transition-colors">
+      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8">
         
         {/* Title */}
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-600 text-white dark:bg-teal-500 shadow-md">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-500/10">
             <svg 
               className="h-5 w-5" 
               fill="none" 
@@ -48,21 +48,21 @@ export function Header({
             </svg>
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+            <h1 className="text-xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-650 to-violet-600 dark:from-indigo-400 dark:to-violet-400">
               LabResource
             </h1>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Gestión de Recursos Tecnológicos de Laboratorio
+            <p className="text-[10px] uppercase font-bold tracking-wider text-zinc-400 dark:text-zinc-500">
+              Gestión de Recursos Tecnológicos
             </p>
           </div>
         </div>
 
         {/* Preferences / User Controls */}
         <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-          <div className="flex items-center gap-2 rounded-lg border border-zinc-200/60 bg-zinc-50/50 px-3 py-1.5 dark:border-zinc-800/60 dark:bg-zinc-900/30">
+          <div className="flex items-center gap-2 rounded-xl border border-indigo-100 bg-indigo-50/20 px-3.5 py-1.5 dark:border-zinc-800/80 dark:bg-zinc-900/30">
             {/* User Icon */}
             <svg 
-              className="h-4 w-4 text-zinc-400 dark:text-zinc-500" 
+              className="h-4 w-4 text-indigo-500 dark:text-indigo-400" 
               fill="none" 
               viewBox="0 0 24 24" 
               stroke="currentColor" 
@@ -85,24 +85,24 @@ export function Header({
                   onKeyDown={(e) => e.key === 'Enter' && handleSave()}
                   autoFocus
                   maxLength={25}
-                  className="w-32 border-b border-teal-600 bg-transparent px-1 text-sm outline-none text-zinc-850 dark:text-zinc-200"
+                  className="w-32 border-b border-indigo-500 bg-transparent px-1 text-sm outline-none text-zinc-800 dark:text-zinc-200"
                 />
                 <button 
                   onClick={handleSave}
-                  className="text-teal-600 hover:text-teal-700 text-xs font-semibold"
+                  className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 text-xs font-semibold"
                 >
                   Ok
                 </button>
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-zinc-700 dark:text-zinc-350">
+                <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                   Responsable: <strong className="text-zinc-950 dark:text-zinc-50">{userName}</strong>
                 </span>
                 <button
                   type="button"
                   onClick={() => setIsEditing(true)}
-                  className="rounded p-0.5 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition"
+                  className="rounded p-0.5 hover:bg-indigo-100/50 dark:hover:bg-zinc-800 text-zinc-400 hover:text-indigo-600 dark:hover:text-zinc-300 transition"
                   title="Editar nombre"
                 >
                   <svg 
@@ -125,8 +125,8 @@ export function Header({
           
           {/* Theme Switcher */}
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400 hidden xs:inline">
-              {theme === 'dark' ? 'Modo Oscuro' : 'Modo Claro'}
+            <span className="text-xs font-semibold uppercase text-zinc-400 dark:text-zinc-500 hidden xs:inline">
+              {theme === 'dark' ? 'Oscuro' : 'Claro'}
             </span>
             <ThemeToggle theme={theme} onToggle={onThemeToggle} />
           </div>

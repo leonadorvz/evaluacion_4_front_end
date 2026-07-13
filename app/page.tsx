@@ -383,7 +383,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#fcfbfa] text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50 transition-colors duration-250">
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-250">
       
       {/* Encabezado */}
       <Header
@@ -397,31 +397,76 @@ export default function Home() {
       <main className="mx-auto w-full max-w-7xl flex-1 px-5 py-6 sm:px-8">
         
         {/* Fila de Estadísticas (Dashboard Panel) */}
-        <section className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:gap-4.5 mb-6">
-          <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-850 dark:bg-zinc-900 transition-colors">
-            <span className="block text-xs font-semibold uppercase text-zinc-400 dark:text-zinc-500">Recursos Registrados</span>
-            <span className="mt-1 block text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
-              {stats.totalItems} <span className="text-xs font-normal text-zinc-500">tipos</span>
-            </span>
+        <section className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:gap-4.5 mb-6">
+          
+          {/* Card 1: Recursos */}
+          <div className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/90 transition-all border-b-4 border-b-indigo-500">
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Recursos Registrados</span>
+                <span className="mt-2 block text-2xl font-extrabold tracking-tight text-zinc-900 dark:text-white">
+                  {stats.totalItems} <span className="text-xs font-normal text-zinc-500">tipos</span>
+                </span>
+              </div>
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-50 text-indigo-500 dark:bg-indigo-950/30 dark:text-indigo-400">
+                <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+            </div>
           </div>
-          <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-850 dark:bg-zinc-900 transition-colors">
-            <span className="block text-xs font-semibold uppercase text-zinc-400 dark:text-zinc-500">Stock Total</span>
-            <span className="mt-1 block text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
-              {stats.totalQuantity} <span className="text-xs font-normal text-zinc-500">unidades</span>
-            </span>
+
+          {/* Card 2: Stock Total */}
+          <div className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/90 transition-all border-b-4 border-b-violet-500">
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Stock Total</span>
+                <span className="mt-2 block text-2xl font-extrabold tracking-tight text-zinc-900 dark:text-white">
+                  {stats.totalQuantity} <span className="text-xs font-normal text-zinc-500">unidades</span>
+                </span>
+              </div>
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-50 text-violet-500 dark:bg-violet-950/30 dark:text-violet-400">
+                <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+            </div>
           </div>
-          <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-850 dark:bg-zinc-900 transition-colors">
-            <span className="block text-xs font-semibold uppercase text-zinc-400 dark:text-zinc-500">Stock Disponible</span>
-            <span className="mt-1 block text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-450">
-              {stats.availableQuantity} <span className="text-xs font-normal text-zinc-500">disp.</span>
-            </span>
+
+          {/* Card 3: Disponible */}
+          <div className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/90 transition-all border-b-4 border-b-emerald-500">
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">Stock Disponible</span>
+                <span className="mt-2 block text-2xl font-extrabold tracking-tight text-emerald-600 dark:text-emerald-450">
+                  {stats.availableQuantity} <span className="text-xs font-normal text-zinc-500">disp.</span>
+                </span>
+              </div>
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-500 dark:bg-emerald-950/30 dark:text-emerald-450">
+                <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
           </div>
-          <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-850 dark:bg-zinc-900 transition-colors">
-            <span className="block text-xs font-semibold uppercase text-zinc-400 dark:text-zinc-500">En Mantención</span>
-            <span className="mt-1 block text-2xl font-bold tracking-tight text-amber-600 dark:text-amber-450">
-              {stats.maintenanceQuantity} <span className="text-xs font-normal text-zinc-500">manten.</span>
-            </span>
+
+          {/* Card 4: En Mantención */}
+          <div className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/90 transition-all border-b-4 border-b-amber-500">
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="block text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">En Mantención</span>
+                <span className="mt-2 block text-2xl font-extrabold tracking-tight text-amber-600 dark:text-amber-450">
+                  {stats.maintenanceQuantity} <span className="text-xs font-normal text-zinc-500">manten.</span>
+                </span>
+              </div>
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-500 dark:bg-amber-950/30 dark:text-amber-450">
+                <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+            </div>
           </div>
+
         </section>
 
         {/* Layout en dos columnas */}
@@ -439,7 +484,7 @@ export default function Home() {
             />
 
             {/* Panel Informativo de Almacenamiento */}
-            <section className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 transition-colors">
+            <section className="rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm dark:border-zinc-800/80 dark:bg-zinc-900/90 transition-colors">
               <h3 className="font-bold text-zinc-900 dark:text-zinc-50 text-sm">Estado del Almacenamiento</h3>
               <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400 leading-normal">
                 Uso de almacenamiento del navegador para este laboratorio:
@@ -447,12 +492,12 @@ export default function Home() {
               
               <div className="mt-4 space-y-3.5 text-xs">
                 <div className="flex items-start gap-2.5">
-                  <span className="inline-flex h-4.5 w-18 shrink-0 items-center justify-center rounded bg-teal-100 text-[10px] font-bold text-teal-850 dark:bg-teal-950/45 dark:text-teal-400">
+                  <span className="inline-flex h-4.5 w-18 shrink-0 items-center justify-center rounded bg-indigo-100 text-[10px] font-bold text-indigo-850 dark:bg-indigo-950/45 dark:text-indigo-400">
                     Local Storage
                   </span>
                   <div>
-                    <span className="font-semibold text-zinc-850 dark:text-zinc-205">lab_resources</span>
-                    <p className="text-[10px] text-zinc-450 dark:text-zinc-400 leading-normal">Guarda la lista del CRUD ({resources.length} recursos). Persiste al reiniciar navegador.</p>
+                    <span className="font-semibold text-zinc-800 dark:text-zinc-200">lab_resources</span>
+                    <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-normal">Guarda la lista del CRUD ({resources.length} recursos). Persiste al reiniciar navegador.</p>
                   </div>
                 </div>
 
@@ -461,8 +506,8 @@ export default function Home() {
                     Session Storage
                   </span>
                   <div>
-                    <span className="font-semibold text-zinc-850 dark:text-zinc-205">lab_resource_draft / lab_filter_*</span>
-                    <p className="text-[10px] text-zinc-450 dark:text-zinc-400 leading-normal">Guarda temporalmente el borrador e inputs de búsqueda. Se destruye al cerrar la pestaña.</p>
+                    <span className="font-semibold text-zinc-800 dark:text-zinc-200">lab_resource_draft / lab_filter_*</span>
+                    <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-normal">Guarda temporalmente el borrador e inputs de búsqueda. Se destruye al cerrar la pestaña.</p>
                   </div>
                 </div>
 
@@ -471,17 +516,17 @@ export default function Home() {
                     Cookies
                   </span>
                   <div>
-                    <span className="font-semibold text-zinc-850 dark:text-zinc-205">lab_theme / lab_user_preferences</span>
-                    <p className="text-[10px] text-zinc-450 dark:text-zinc-400 leading-normal">Guarda las preferencias visuales (modo oscuro, nombre, vista) y viaja en las peticiones HTTP.</p>
+                    <span className="font-semibold text-zinc-800 dark:text-zinc-200">lab_theme / lab_user_preferences</span>
+                    <p className="text-[10px] text-zinc-500 dark:text-zinc-400 leading-normal">Guarda las preferencias visuales (modo oscuro, nombre, vista) y viaja en las peticiones HTTP.</p>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-5 border-t border-zinc-100 pt-4 dark:border-zinc-800">
+              <div className="mt-5 border-t border-zinc-150 pt-4 dark:border-zinc-800">
                 <button
                   type="button"
                   onClick={handleResetDemo}
-                  className="w-full rounded-lg border border-zinc-300 bg-white py-2 text-xs font-semibold text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 transition"
+                  className="w-full rounded-lg border border-zinc-300 bg-white py-2 text-xs font-semibold text-zinc-700 hover:bg-indigo-50/50 hover:text-indigo-650 hover:border-indigo-200 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-305 dark:hover:bg-indigo-950/20 dark:hover:text-indigo-400 transition-all duration-200"
                 >
                   Restaurar Datos de Prueba
                 </button>
