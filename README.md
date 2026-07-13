@@ -45,12 +45,12 @@ Para cumplir con las instrucciones del profesor, dividimos los datos de esta for
 
 2. **Instalar los paquetes de node:**
    ```bash
-   npm install
+   pnpm install --ignore-scripts
    ```
 
 3. **Correr el servidor de desarrollo:**
    ```bash
-   npm run dev
+   pnpm run dev
    ```
 
 4. **Ver en el navegador:**
